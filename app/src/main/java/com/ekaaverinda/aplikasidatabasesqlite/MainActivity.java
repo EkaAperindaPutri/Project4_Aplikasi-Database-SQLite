@@ -1,76 +1,127 @@
 package com.ekaaverinda.aplikasidatabasesqlite;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-import com.ekaaverinda.aplikasidatabasesqlite.databinding.ActivityMainBinding;
+import com.ekaaverinda.aplikasidatabasesqlite.adapter.Adapter;
+import com.ekaaverinda.aplikasidatabasesqlite.helper.DbHelper;
+import com.ekaaverinda.aplikasidatabasesqlite.model.Data;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
+    ListView listView;
+    AlertDialog.Builder dialog;
+    List<Data> itemList = new ArrayList<Data>();
+    Adapter adapter;
+    DbHelper SQLite = new DbHelper(this);
+
+    public static final String TAG_ID = "id";
+    public static final String TAG_NAME = "name";
+    public static final String TAG_ADDRESS = "address";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        //Tambah SQLite
+        SQLite = new DbHelper(getApplicationContext());
 
-        setSupportActionBar(binding.toolbar);
+        FloatingActionButton fab = findViewById(R.id.fab);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        //Tambah List View
+        listView = (ListView) findViewById(R.id.list_view);
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onClick(View v) {
+                //Tambah Intent untuk pindah ke halaman Add dan Edit
+                Intent intent = new Intent(MainActivity.this, AddEdit.class);
+                startActivity(intent);
             }
         });
+        //Tambah adapter dan listview
+        adapter = new Adapter(MainActivity.this, itemList);
+        listView.setAdapter(adapter);
+
+        //Tekam lama daftar listview untuk menampilkan edit dan hapus
+        listView.setOnItemClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(final AdapterView<?> parent, View view,
+                                           final int position, long id) {
+                // TODO Auto-generated method stub
+                final String idx = itemList.get(position).getId();
+                final String name = itemList.get(position).getName();
+                final String address = itemList.get(position).getAddress();
+
+                final CharSequence() dialogitem = ("Edit", "Delete");
+                dialog = new AlertDialog.Builder(MainActivity.this);
+                dialog.setCancelable(true);
+                dialog.setItems(dialogitem, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // TODO Auto-generated method stub
+                        switch (which) {
+                            case 0:
+                                Intent intent = new Intent(MainActivity.this, AddEdit.class);
+                                intent.putExtra(TAG_ID, idx);
+                                intent.putExtra(TAG_NAME, name);
+                                intent.putExtra(TAG_ADDRESS, address);
+                                startActivity(intent);
+                                break;
+                            case 1:
+                                SQLite.delete(Integer.parseInt(idx));
+                                itemList.clear();
+                                getAllData();
+                                break;
+                        }
+                    }
+                }).show();
+                return false;
+            }
+        });
+        getAllData();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    private void getAllData() {
+        ArrayList<HashMap<String, String>> row = SQLite.getAllData();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        for (int i = 0; 1 < row.size(); i++) {
+            String id = row.get(i).get(TAG_ID);
+            String poster = row.get(i).get(TAG_NAME);
+            String title = row.get(i).get(TAG_ADDRESS);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            Data data = new Data();
+
+            data.setId(id);
+            data.setName(poster);
+            data.setAddress(title);
+
+            itemList.add(data);
         }
-
-        return super.onOptionsItemSelected(item);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+    protected void onResume() {
+        super.onResume();
+        itemList.clear();
+        getAllData();
     }
 }
