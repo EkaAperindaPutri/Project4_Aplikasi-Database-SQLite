@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.ekaaverinda.aplikasidatabasesqlite.R;
 import com.ekaaverinda.aplikasidatabasesqlite.model.Data;
 
+import java.util.List;
+
 public class Adapter extends BaseAdapter {
     private Activity activity;
     private LayoutInflater inflater;

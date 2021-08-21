@@ -4,12 +4,7 @@ public class Data {
     private String id, name, address;
 
     public Data() {
-    }
 
-    public Data(String id, String name, String address) {
-        this.id = id;
-        this.name = name;
-        this.address = address;
     }
 
     public String getId() {
@@ -34,5 +29,11 @@ public class Data {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public Data(String id, String name, String addrees) {
+        this.id = id;
+        this.name = name;
+        this.address = addrees;
     }
 }

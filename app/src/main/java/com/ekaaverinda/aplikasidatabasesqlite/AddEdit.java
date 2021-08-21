@@ -84,7 +84,7 @@ public class AddEdit extends AppCompatActivity {
         }
     }
     // Kosongkan semua Edit Teks
-    public void onBack() {
+    public void blank() {
         txt_name.requestFocus();
         txt_id.setText(null);
         txt_name.setText(null);
